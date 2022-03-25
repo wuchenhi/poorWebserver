@@ -54,10 +54,12 @@ int main(int argc, char *argv[])
     {
         ifstrm.getline(buf, BufSize);
         write(clnt_sd, buf, BufSize);
-    }      
+    }
+    //优雅关闭
     shutdown(clnt_sd, SHUT_WR);
+    
     read(clnt_sd, buf, BufSize);
-
+    std::cout<<"receive: "<< buf <<std::endl;
     ifstrm.close();
     close(clnt_sd);
     close(serv_sd);
@@ -68,3 +70,4 @@ void error_handling(string message){
     std::cerr << message << std::endl;
     exit(1);
 }
+
