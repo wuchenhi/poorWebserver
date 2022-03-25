@@ -2,7 +2,6 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-
 #include <string>
 #include <unistd.h>
 #include <string.h>
@@ -11,6 +10,7 @@
 using std::string;
 using std::ifstream;
 
+#define filename "testWord"
 const int BufSize = 100;
 
 void erro_handling(string message);
@@ -19,9 +19,8 @@ int main(int argc, char *argv[])
 {
     //服务端、客户端文件描述符
     int serv_sd, clnt_sd;
-
+    //缓冲区
     char buf[BufSize];
-
     struct sockaddr_in serv_adr, clnt_adr;
     socklen_t clnt_adr_sz;
     //若未指定端口，返回
@@ -30,7 +29,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
     //读文件
-    ifstream ifstrm("testWord",ifstream::in);
+    ifstream ifstrm(filename,ifstream::in | ifstream::app);
     serv_sd = socket(PF_INET, SOCK_STREAM, 0);
 
     memset(&serv_adr, 0, sizeof(serv_adr));
@@ -40,7 +39,7 @@ int main(int argc, char *argv[])
 
     bind(serv_sd, (struct sockaddr *)&serv_adr, sizeof(serv_adr));
 
-    listen(serv_sd, 5);
+    listen(serv_sd, 15);
 
     clnt_adr_sz = sizeof(clnt_adr);
     clnt_sd = accept(serv_sd, (struct sockaddr *)&clnt_adr, &clnt_adr_sz);

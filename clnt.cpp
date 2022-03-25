@@ -2,37 +2,34 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-
 #include <string>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>  
 
 using std::string;
-using std::ifstream;
+using std::ofstream;
 
+#define filename "getWord"
 const int BufSize = 100;
 
 void error_handling(string message);
 
 int main(int argc, char *argv[])
 {
-
+    //描述符
     int sd;
-    
-    FILE *fp;  //TODO
-
+    //缓冲区
     char buf[BufSize];
-    int read_cnt;
     struct sockaddr_in serv_adr;
-
+    //若未指定ip/端口，返回
     if (argc != 3)
     {
         std::cout<<"Please use "<< argv[0] <<" <IP> <port>"<<std::endl;
         exit(1);
     }
-
-    fp = fopen("receive.cpp", "wb");
+    //写文件
+    ofstream ofstrm(filename, ofstream::out | ofstream::app);
     sd = socket(PF_INET, SOCK_STREAM, 0);
 
     memset(&serv_adr, 0, sizeof(serv_adr));
@@ -42,12 +39,12 @@ int main(int argc, char *argv[])
 
     connect(sd, (struct sockaddr *)&serv_adr, sizeof(serv_adr));
 
-    while ((read_cnt = read(sd, buf, BufSize)) != 0)
-        fwrite((void *)buf, 1, read_cnt, fp);
+    while (read(sd, buf, BufSize)) 
+        ofstrm << buf <<std::endl;
 
     std::cout<< "Received file data" <<std::endl;
     write(sd, "Thank you", 10);
-    fclose(fp);
+    ofstrm.close();
     close(sd);
     return 0;
 }
