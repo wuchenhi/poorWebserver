@@ -18,7 +18,7 @@ void *send_msg(void *arg);
 void *recv_msg(void *arg);
 void send_msg(char *msg, int len);
 
-char name[NAME_SIZE] = "[DEFAULT]";
+char name[NAME_SIZE] = "nobody:";
 char msg[BUF_SIZE];
 
 int main(int argc, char *argv[])
@@ -33,7 +33,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    sprintf(name, "[%s]", argv[3]);
+    sprintf(name, "%s:", argv[3]);
+    //std::cout<< argv[3] << ": ";
     sock = socket(PF_INET, SOCK_STREAM, 0);
 
     memset(&serv_addr, 0, sizeof(serv_addr));
@@ -58,7 +59,8 @@ void *send_msg(void *arg) // 发送消息
     char name_msg[NAME_SIZE + BUF_SIZE];
     while (1)
     {
-        fgets(msg, BUF_SIZE, stdin);
+        std::cin >> msg;
+        //TODO
         if (!strcmp(msg, "q\n") || !strcmp(msg, "Q\n"))
         {
             close(sock);
@@ -81,7 +83,7 @@ void *recv_msg(void *arg) // 读取消息
         if (str_len == -1)
             return (void *)-1;
         name_msg[str_len] = 0;
-        fputs(name_msg, stdout);
+        std::cout << name_msg <<std::endl;
     }
     return NULL;
 }
