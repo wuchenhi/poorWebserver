@@ -13,7 +13,7 @@ using std::ifstream;
 #define filename "testWord"
 const int BufSize = 100;
 
-void erro_handling(string message);
+void error_handling(string message);
 
 int main(int argc, char *argv[])
 {
@@ -37,9 +37,10 @@ int main(int argc, char *argv[])
     serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
     serv_adr.sin_port = htons(atoi(argv[1]));
 
-    bind(serv_sd, (struct sockaddr *)&serv_adr, sizeof(serv_adr));
-
-    listen(serv_sd, 15);
+    if (bind(serv_sd, (struct sockaddr *)&serv_adr, sizeof(serv_adr))== -1)
+        error_handling("bind() error");
+    if (listen(serv_sd, 15)== -1)
+        error_handling("listen() error");
 
     clnt_adr_sz = sizeof(clnt_adr);
     clnt_sd = accept(serv_sd, (struct sockaddr *)&clnt_adr, &clnt_adr_sz);

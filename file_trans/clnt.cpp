@@ -36,8 +36,9 @@ int main(int argc, char *argv[])
     serv_adr.sin_family = AF_INET;
     serv_adr.sin_addr.s_addr = inet_addr(argv[1]);
     serv_adr.sin_port = htons(atoi(argv[2]));
-
-    connect(sd, (struct sockaddr *)&serv_adr, sizeof(serv_adr));
+    
+    if (connect(sd, (struct sockaddr *)&serv_adr, sizeof(serv_adr)) == -1)
+        error_handling("connect() error");
 
     while (read(sd, buf, BufSize)) 
         ofstrm << buf <<std::endl;
