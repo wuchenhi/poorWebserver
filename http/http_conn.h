@@ -166,7 +166,7 @@ private:
     bool add_blank_line();
 
 public:
-    static int m_epollfd;
+    static int m_epollfd;     //epoll
     static int m_user_count;
     MYSQL *mysql;
     int m_state;  //读为0, 写为1

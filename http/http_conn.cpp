@@ -57,6 +57,7 @@ void addfd(int epollfd, int fd, bool one_shot) {
     epoll_event event;
     event.data.fd = fd;
 
+    //event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
     event.events = EPOLLIN | EPOLLRDHUP;
 
     if (one_shot)
@@ -75,12 +76,13 @@ void removefd(int epollfd, int fd) {
 void modfd(int epollfd, int fd, int ev) {
     epoll_event event;
     event.data.fd = fd;
-
+    //event.events = ev | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
     event.events = ev | EPOLLONESHOT | EPOLLRDHUP;
 
     epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
 }
 
+//初始化
 int http_conn::m_user_count = 0;
 int http_conn::m_epollfd = -1;
 
@@ -144,11 +146,16 @@ void http_conn::init() {
 //返回值为行的读取状态，有LINE_OK,LINE_BAD,LINE_OPEN
 http_conn::LINE_STATUS http_conn::parse_line() {
     char temp;
+    //m_read_idx指向缓冲区m_read_buf的数据末尾的下一个字节
+    //m_checked_idx指向从状态机当前正在分析的字节
     for (; m_checked_idx < m_read_idx; ++m_checked_idx) {
-        temp = m_read_buf[m_checked_idx];
+        temp = m_read_buf[m_checked_idx];//temp为将要分析的字节
+        //如果当前是\r字符，则有可能会读取到完整行
         if (temp == '\r') {
+            //下一个字符达到了buffer结尾，则接收不完整，需要继续接收
             if ((m_checked_idx + 1) == m_read_idx)
                 return LINE_OPEN;
+            //下一个字符是\n，将\r\n改为\0\0 
             else if (m_read_buf[m_checked_idx + 1] == '\n') {
                 m_read_buf[m_checked_idx++] = '\0';
                 m_read_buf[m_checked_idx++] = '\0';
@@ -156,7 +163,10 @@ http_conn::LINE_STATUS http_conn::parse_line() {
             }
             return LINE_BAD;
         }
+        //如果当前字符是\n，也有可能读取到完整行
+        //一般是上次读取到\r就到buffer末尾了，没有接收完整，再次接收时会出现这种情况
         else if (temp == '\n') {
+            //前一个字符是\r，则接收完整
             if (m_checked_idx > 1 && m_read_buf[m_checked_idx - 1] == '\r') {
                 m_read_buf[m_checked_idx - 1] = '\0';
                 m_read_buf[m_checked_idx++] = '\0';
@@ -165,6 +175,7 @@ http_conn::LINE_STATUS http_conn::parse_line() {
             return LINE_BAD;
         }
     }
+    //并没有找到\r\n，需要继续接收
     return LINE_OPEN;
 }
 
@@ -192,23 +203,28 @@ bool http_conn::read_once() {
     return true; 
 }
 
-//解析http请求行，获得请求方法，目标url及http版本号
-http_conn::HTTP_CODE http_conn::parse_request_line(char *text) {
-    m_url = strpbrk(text, " \t");
+/*---------------------------------------------------------------*/
+/*------------------------主状态机-------------------------------*/
+//解析http请求行，获得请求方法，目标url及http版本号  FIXME
+// 如 GET /562f25980001b1b106000338.jpg HTTP/1.1
+http_conn::HTTP_CODE http_conn::parse_request_line(char *text) {  
+    //strpbrk 检索字符串 str1 中第一个匹配字符串 str2 中字符的字符，不包含空结束字符。
+    //即依次检验字符串 str1 中的字符，当被检验字符在字符串 str2 中也包含时，则停止检验，并返回该字符位置。
+    m_url = strpbrk(text, " \t");//\t 水平制表符
     if (!m_url) {
         return BAD_REQUEST;
     }
     *m_url++ = '\0';
     char *method = text;
-    if (strcasecmp(method, "GET") == 0)
+    if (strcasecmp(method, "GET") == 0) //忽略大小写比较字符串
         m_method = GET;
     else if (strcasecmp(method, "POST") == 0) {
         m_method = POST;
-        cgi = 1;
+        cgi = 1;//启用POST
     }
     else
         return BAD_REQUEST;
-    m_url += strspn(m_url, " \t");
+    m_url += strspn(m_url, " \t");//字符串 str1 中第一个不在字符串 str2 中出现的字符下标
     m_version = strpbrk(m_url, " \t");
     if (!m_version)
         return BAD_REQUEST;
@@ -282,18 +298,24 @@ http_conn::HTTP_CODE http_conn::parse_content(char *text) {
 }
 
 http_conn::HTTP_CODE http_conn::process_read() {
+    //初始化从状态机状态
     LINE_STATUS line_status = LINE_OK;
+    //初始化HTTP请求解析结果
     HTTP_CODE ret = NO_REQUEST;
     char *text = 0;
-
+    //parse_line为从状态机的具体实现
     while ((m_check_state == CHECK_STATE_CONTENT && line_status == LINE_OK) || ((line_status = parse_line()) == LINE_OK)) {
         text = get_line();
+        //m_start_line是每一个数据行在m_read_buf中的起始位置
+        //m_checked_idx表示从状态机在m_read_buf中读取的位置
         m_start_line = m_checked_idx;
         spdlog::info("{0}", text);
+        //主状态机的三种状态转移逻辑
         switch (m_check_state)
         {
         case CHECK_STATE_REQUESTLINE:
         {
+            //解析请求行
             ret = parse_request_line(text);
             if (ret == BAD_REQUEST)
                 return BAD_REQUEST;
@@ -301,9 +323,11 @@ http_conn::HTTP_CODE http_conn::process_read() {
         }
         case CHECK_STATE_HEADER:
         {
+            //解析请求头
             ret = parse_headers(text);
             if (ret == BAD_REQUEST)
                 return BAD_REQUEST;
+            //完整解析GET请求后，跳转到报文响应函数
             else if (ret == GET_REQUEST)
             {
                 return do_request();
@@ -312,9 +336,12 @@ http_conn::HTTP_CODE http_conn::process_read() {
         }
         case CHECK_STATE_CONTENT:
         {
+            //解析消息体
             ret = parse_content(text);
+            //完整解析POST请求后，跳转到报文响应函数//完整解析POST请求后，跳转到报文响应函数
             if (ret == GET_REQUEST)
                 return do_request();
+            //解析完消息体即完成报文解析，避免再次进入循环，更新line_status ？
             line_status = LINE_OPEN;
             break;
         }
@@ -325,6 +352,7 @@ http_conn::HTTP_CODE http_conn::process_read() {
     return NO_REQUEST;
 }
 
+//报文响应函数
 http_conn::HTTP_CODE http_conn::do_request() {
     strcpy(m_real_file, doc_root);
     int len = strlen(doc_root);

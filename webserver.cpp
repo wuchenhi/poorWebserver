@@ -1,18 +1,18 @@
 #include "webserver.h"
 
 WebServer::WebServer() {
-    //http_conn类对象 TODO
+    //http_conn类对象users
     users = new http_conn[MAX_FD];
 
-    //root文件夹路径
+    //root文件夹路径存在m_root里
     char server_path[200];
-    getcwd(server_path, 200);
+    getcwd(server_path, 200);//当前工作目录的绝对路径复制到server_path所指的内存空间中
     char root[6] = "/root";
     m_root = (char *)malloc(strlen(server_path) + strlen(root) + 1);
-    strcpy(m_root, server_path);
-    strcat(m_root, root);
+    strcpy(m_root, server_path);//char *strcpy(char *dest, const char *src)
+    strcat(m_root, root);   // root 所指向的字符串追加到 m_root 所指向的字符串的结尾
 
-    //定时器
+    //定时器对象users_timer
     users_timer = new client_data[MAX_FD];
 }
 
@@ -82,8 +82,9 @@ void WebServer::eventListen() {
     epoll_event events[MAX_EVENT_NUMBER];
     m_epollfd = epoll_create(5);
     assert(m_epollfd != -1);
-
+    ////将listenfd放在epoll树上
     utils.addfd(m_epollfd, m_listenfd, false);
+    ////将上述epollfd赋值给http类对象的m_epollfd属性
     http_conn::m_epollfd = m_epollfd;
 
     ret = socketpair(PF_UNIX, SOCK_STREAM, 0, m_pipefd);
@@ -237,12 +238,13 @@ void WebServer::eventLoop() {
 
     while (!stop_server)
     {
+        ////等待所监控文件描述符上有事件的产生
         int number = epoll_wait(m_epollfd, events, MAX_EVENT_NUMBER, -1);
         if (number < 0 && errno != EINTR) {
             spdlog::error("epoll failure");
             break;
         }
-
+        //对所有就绪事件进行处理
         for (int i = 0; i < number; i++) {
             int sockfd = events[i].data.fd;
 
@@ -252,6 +254,7 @@ void WebServer::eventLoop() {
                 if (false == flag)
                     continue;
             }
+            //处理异常事件
             else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {
                 //服务器端关闭连接，移除对应的定时器
                 util_timer *timer = users_timer[sockfd].timer;
