@@ -12,4 +12,4 @@ server: main.cpp  ./timer/lst_timer.cpp ./http/http_conn.cpp  ./CGImysql/sql_con
 	$(CXX) -o server  $^ $(CXXFLAGS) -lpthread -lmysqlclient
 
 clean:
-	rm  -r server
+	rm -r server

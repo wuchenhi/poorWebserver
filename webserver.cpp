@@ -36,12 +36,6 @@ void WebServer::init(int port, string user, string passWord, string databaseName
     m_thread_num = thread_num;
 }
 
-void WebServer::trig_mode() {
-    //ET + ET
-    m_LISTENTrigmode = 1;
-    m_CONNTrigmode = 1; 
-}
-
 void WebServer::sql_pool() {
     //初始化数据库连接池
     m_connPool = connection_pool::GetInstance();
@@ -109,7 +103,7 @@ void WebServer::eventListen() {
 }
 
 void WebServer::timer(int connfd, struct sockaddr_in client_address) {
-    users[connfd].init(connfd, client_address, m_root, m_CONNTrigmode, m_close_log, m_user, m_passWord, m_databaseName);
+    users[connfd].init(connfd, client_address, m_root, m_user, m_passWord, m_databaseName);
 
     //初始化client_data数据
     //创建定时器，设置回调函数和超时时间，绑定用户数据，将定时器添加到链表中

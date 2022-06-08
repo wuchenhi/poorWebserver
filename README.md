@@ -32,6 +32,7 @@ clang++ -fsanitize=address -g webServe.cpp
 ```
 make
 webbench文件夹内：
-sudo make && sudo make install ../webServe
-webbench -c 1  -t  2 http://127.0.0.1:9001/index.html
+sudo make && sudo make install ../server
+webbench -c 1  -t  2 http://127.0.0.1:9001
 ```
+CREATE USER 'wuyi'@'LOCALHOST' IDENTIFIED BY 'Wch@0824';

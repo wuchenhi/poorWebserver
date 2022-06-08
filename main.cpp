@@ -3,9 +3,9 @@
 int main(int argc, char *argv[])
 {
     //需要修改的数据库信息,登录名,密码,库名
-    string user = "name";
-    string passwd = "passwd";
-    string databasename = "wuyidb";
+    string user = "wuyi";
+    string passwd = "Wch@0824";
+    string databasename = "yourdb";
 
     //命令行解析
     Config config;
@@ -25,9 +25,6 @@ int main(int argc, char *argv[])
 
     //线程池
     server.thread_pool();
-
-    //触发模式
-    server.trig_mode();
 
     //监听
     server.eventListen();

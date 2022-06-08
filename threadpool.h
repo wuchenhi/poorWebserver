@@ -8,6 +8,7 @@
 #include "locker.h"
 #include "CGImysql/sql_connection_pool.h"
 
+
 #include "spdlog/spdlog.h"
 
 //使用一个工作队列完全解除了主线程和工作线程的耦合关系：主线程往工作队列中插入任务，工作线程通过竞争来取得任务并执行它。

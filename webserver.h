@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <cassert>
 #include <sys/epoll.h>
-
 #include "threadpool.h"
 #include "./http/http_conn.h"
 
@@ -30,8 +29,6 @@ public:
 
     void thread_pool();
     void sql_pool();
-
-    void trig_mode();
     void eventListen();
     void eventLoop();
     void timer(int connfd, struct sockaddr_in client_address);
@@ -46,8 +43,6 @@ public:
     //基础
     int m_port;
     char *m_root;
-    int m_close_log;
-    int m_actormodel;
 
     int m_pipefd[2];
     int m_epollfd;
@@ -68,9 +63,6 @@ public:
     epoll_event events[MAX_EVENT_NUMBER];
 
     int m_listenfd;
-    int m_TRIGMode;
-    int m_LISTENTrigmode;
-    int m_CONNTrigmode;
 
     //定时器相关
     client_data *users_timer;

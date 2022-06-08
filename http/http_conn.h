@@ -40,6 +40,43 @@ public:
     static const int READ_BUFFER_SIZE = 2048;
     //设置写缓冲区m_write_buf大小
     static const int WRITE_BUFFER_SIZE = 1024;
+    
+    enum METHOD
+    {
+        GET = 0,
+        POST,
+        HEAD,
+        PUT,
+        DELETE,
+        TRACE,
+        OPTIONS,
+        CONNECT,
+        PATH
+    };
+    enum CHECK_STATE
+    {
+        CHECK_STATE_REQUESTLINE = 0,
+        CHECK_STATE_HEADER,
+        CHECK_STATE_CONTENT
+    };
+    enum HTTP_CODE
+    {
+        NO_REQUEST,
+        GET_REQUEST,
+        BAD_REQUEST,
+        NO_RESOURCE,
+        FORBIDDEN_REQUEST,
+        FILE_REQUEST,
+        INTERNAL_ERROR,
+        CLOSED_CONNECTION
+    };
+    enum LINE_STATUS
+    {
+        LINE_OK = 0,
+        LINE_BAD,
+        LINE_OPEN
+    };
+    /*
     //报文的请求方法，目前只有GET和POST
     enum class METHOD {
         GET = 0,
@@ -75,7 +112,7 @@ public:
         BAD,    //报文语法有误
         OPEN    //不完整行
     };
-
+    */
 public:
     http_conn() = default;
     ~http_conn() = default;
@@ -180,9 +217,6 @@ private:
     char *doc_root;
 
     map<string, string> m_users;
-    int m_TRIGMode;
-    int m_close_log;
-
     char sql_user[100];
     char sql_passwd[100];
     char sql_name[100];
