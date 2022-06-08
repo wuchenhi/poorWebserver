@@ -40,9 +40,8 @@ public:
     static const int READ_BUFFER_SIZE = 2048;
     //设置写缓冲区m_write_buf大小
     static const int WRITE_BUFFER_SIZE = 1024;
-    
-    enum METHOD
-    {
+    //报文的请求方法，目前只有GET和POST
+    enum METHOD {
         GET = 0,
         POST,
         HEAD,
@@ -53,14 +52,14 @@ public:
         CONNECT,
         PATH
     };
-    enum CHECK_STATE
-    {
-        CHECK_STATE_REQUESTLINE = 0,
-        CHECK_STATE_HEADER,
-        CHECK_STATE_CONTENT
+    //主状态机的状态
+    enum CHECK_STATE {
+        CHECK_STATE_REQUESTLINE = 0, //解析请求行
+        CHECK_STATE_HEADER,          //解析请求头
+        CHECK_STATE_CONTENT          //POST时 解析消息体
     };
-    enum HTTP_CODE
-    {
+    //报文解析的结果
+    enum HTTP_CODE {
         NO_REQUEST,
         GET_REQUEST,
         BAD_REQUEST,
@@ -70,11 +69,11 @@ public:
         INTERNAL_ERROR,
         CLOSED_CONNECTION
     };
-    enum LINE_STATUS
-    {
-        LINE_OK = 0,
-        LINE_BAD,
-        LINE_OPEN
+    //从状态机的状态
+    enum LINE_STATUS {
+        LINE_OK = 0,        //完整行
+        LINE_BAD,           //报文语法有误
+        LINE_OPEN           //不完整行
     };
     /*
     //报文的请求方法，目前只有GET和POST
