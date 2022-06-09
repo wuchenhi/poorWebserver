@@ -24,43 +24,50 @@
 #include <time.h>
 #include "spdlog/spdlog.h"
 
+//利用alarm函数周期性地触发SIGALRM信号,
+//该信号的信号处理函数利用 管道 通知主循环执行定时器链表上的定时任务
+
+//连接资源结构体成员需要用到定时器类 前向声明
 class util_timer;
 
-struct client_data
-{
-    sockaddr_in address;
-    int sockfd;
-    util_timer *timer;
+//连接资源结
+struct client_data {
+    sockaddr_in address;  //客户端socket地址
+    int sockfd;           //socket文件描述符
+    util_timer *timer;    //定时器
 };
 
-class util_timer
-{
+//定时器类
+class util_timer {
 public:
     util_timer() : prev(NULL), next(NULL) {}
 
 public:
-    time_t expire;
-    
-    void (* cb_func)(client_data *);
+    time_t expire;                  //超时时间
+    void (* cb_func)(client_data *);//回调函数
     client_data *user_data;
     util_timer *prev;
     util_timer *next;
 };
 
-class sort_timer_lst
-{
+//定时器容器类
+class sort_timer_lst {
 public:
     sort_timer_lst();
     ~sort_timer_lst();
-
+    //添加定时器，内部调用私有成员add_timer
     void add_timer(util_timer *timer);
+    //调整定时器，任务发生变化时，调整定时器在链表中的位置
     void adjust_timer(util_timer *timer);
+    //删除定时器
     void del_timer(util_timer *timer);
+    //定时任务处理函数
     void tick();
 
 private:
+    //被公有成员add_timer和adjust_time调用
     void add_timer(util_timer *timer, util_timer *lst_head);
-
+    //头尾结点 无意义 方便内部调整
     util_timer *head;
     util_timer *tail;
 };

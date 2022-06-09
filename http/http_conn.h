@@ -23,7 +23,7 @@
 #include <map>
 #include "spdlog/spdlog.h"
 #include "../locker.h"
-#include "../CGImysql/sql_connection_pool.h"
+#include "../mysql/sql_connection_pool.h"
 #include "../timer/lst_timer.h"
 
 //主状态机在内部调用从状态机,从状态机将处理状态和数据传给主状态机
