@@ -40,6 +40,7 @@ public:
     static const int READ_BUFFER_SIZE = 2048;
     //设置写缓冲区m_write_buf大小
     static const int WRITE_BUFFER_SIZE = 1024;
+    /*
     //报文的请求方法，目前只有GET和POST
     enum METHOD {
         GET = 0,
@@ -75,7 +76,7 @@ public:
         LINE_BAD,           //报文语法有误
         LINE_OPEN           //不完整行
     };
-    /*
+    */
     //报文的请求方法，目前只有GET和POST
     enum class METHOD {
         GET = 0,
@@ -96,13 +97,13 @@ public:
     };
     //报文解析的结果
     enum class HTTP_CODE {
-        NO_REQUEST,
-        GET_REQUEST,
-        BAD_REQUEST,
-        NO_RESOURCE,
-        FORBIDDEN_REQUEST,
-        FILE_REQUEST,
-        INTERNAL_ERROR,
+        NO_REQUEST,         //请求不完整，需要继续读取请求报文数据 跳转主线程继续监测读事件
+        GET_REQUEST,        //获得了完整的HTTP请求,调用do_request完成请求资源映射
+        BAD_REQUEST,        //HTTP请求报文有语法错误或请求资源为目录,跳转process_write完成响应报文
+        NO_RESOURCE,        //请求资源不存在,跳转process_write完成响应报文
+        FORBIDDEN_REQUEST,  //请求资源禁止访问，没有读取权限,跳转process_write完成响应报文
+        FILE_REQUEST,       //请求资源可以正常访问,跳转process_write完成响应报文
+        INTERNAL_ERROR,     //服务器内部错误，该结果在主状态机逻辑switch的default下，一般不会触发
         CLOSED_CONNECTION
     };
     //从状态机的状态
@@ -111,7 +112,7 @@ public:
         BAD,    //报文语法有误
         OPEN    //不完整行
     };
-    */
+ 
 public:
     http_conn() = default;
     ~http_conn() = default;

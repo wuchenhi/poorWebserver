@@ -59,6 +59,11 @@ public:
     void add_timer(util_timer *timer);
     //调整定时器，任务发生变化时，调整定时器在链表中的位置
     void adjust_timer(util_timer *timer);
+    //heap
+    //void doWork(int id);
+    //void clear();
+    //void pop();        //类似于删除？
+    //int GetNextTick(); //?
     //删除定时器
     void del_timer(util_timer *timer);
     //定时任务处理函数
@@ -68,12 +73,23 @@ private:
     //被公有成员add_timer和adjust_time调用
     void add_timer(util_timer *timer, util_timer *lst_head);
     //头尾结点 无意义 方便内部调整
+
+    //上滤 下滤 TODO
+    //void del_(size_t i);
+    
+    //void siftup_(size_t i);
+
+    //bool siftdown_(size_t index, size_t n);
+
+    //void SwapNode_(size_t i, size_t j);
+
+    //std::vector<TimerNode> heap_;
+    //std::unordered_map<int, size_t> ref_;
     util_timer *head;
     util_timer *tail;
 };
 
-class Utils
-{
+class Utils {
 public:
     Utils() {}
     ~Utils() {}

@@ -81,7 +81,7 @@ make
 webbench文件夹内：
 make clean //原来的webbench存在就先删除
 sudo make && sudo make install ../server
-webbench -c 10000  -t  5 http://127.0.0.1:9001
+webbench -c 10000  -t  5 http://localhost:9001
 
 ```
 
