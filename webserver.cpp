@@ -1,6 +1,7 @@
 #include "webserver.h"
 
-WebServer::WebServer() {
+/*
+WebServer::WebServer(int x) : utils(5) {
     //http_conn类对象users
     users = new http_conn[MAX_FD];
 
@@ -15,6 +16,7 @@ WebServer::WebServer() {
     //定时器对象users_timer
     users_timer = new client_data[MAX_FD];
 }
+*/
 
 WebServer::~WebServer() {
     close(m_epollfd);
@@ -114,7 +116,7 @@ void WebServer::timer(int connfd, struct sockaddr_in client_address) {
     users_timer[connfd].address = client_address;
     users_timer[connfd].sockfd = connfd;
     //创建定时器临时变量
-    util_timer *timer = new util_timer;
+    heap_timer *timer = new heap_timer(5);
     //设置定时器对应的连接资源
     timer->user_data = &users_timer[connfd];
     //设置回调函数
@@ -124,13 +126,13 @@ void WebServer::timer(int connfd, struct sockaddr_in client_address) {
     timer->expire = cur + 3 * TIMESLOT;
     //创建该连接对应的定时器，初始化为前述临时变量
     users_timer[connfd].timer = timer;
-    //将该定时器添加到链表中
+    //将该定时器添加到堆中
     utils.m_timer_lst.add_timer(timer);
 }
 
-//若有数据传输，则将定时器往后延迟3个单位
+//若有数据传输，则将定时器往后延迟3个单位 TODO
 //并对新的定时器在链表上的位置进行调整
-void WebServer::adjust_timer(util_timer *timer) {
+void WebServer::adjust_timer(heap_timer *timer) {
     time_t cur = time(NULL);
     timer->expire = cur + 3 * TIMESLOT;
     utils.m_timer_lst.adjust_timer(timer);
@@ -138,7 +140,7 @@ void WebServer::adjust_timer(util_timer *timer) {
 }
 
 //服务器端关闭连接，移除对应的定时器
-void WebServer::deal_timer(util_timer *timer, int sockfd) {
+void WebServer::deal_timer(heap_timer *timer, int sockfd) {
     timer->cb_func(&users_timer[sockfd]);
     if (timer) {
         utils.m_timer_lst.del_timer(timer);
@@ -206,7 +208,7 @@ bool WebServer::dealwithsignal(bool &timeout, bool &stop_server) {
 //处理读事件时，若某连接上发生读事件，将对应定时器向后移动，否则，执行定时事件
 void WebServer::dealwithread(int sockfd) {
     //创建定时器临时变量，将该连接对应的定时器取出来
-    util_timer *timer = users_timer[sockfd].timer;
+    heap_timer *timer = users_timer[sockfd].timer;
 
     //reactor
     if (timer) {
@@ -229,7 +231,7 @@ void WebServer::dealwithread(int sockfd) {
 }
 //处理写事件时，若服务器通过某连接给浏览器发送数据，将对应定时器向后移动，否则，执行定时事件
 void WebServer::dealwithwrite(int sockfd) {
-    util_timer *timer = users_timer[sockfd].timer;
+    heap_timer *timer = users_timer[sockfd].timer;
     //reactor
     if (timer) {
         adjust_timer(timer);
@@ -274,7 +276,7 @@ void WebServer::eventLoop() {
             //处理异常事件
             else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {
                 //服务器端关闭连接，移除对应的定时器
-                util_timer *timer = users_timer[sockfd].timer;
+                heap_timer *timer = users_timer[sockfd].timer;
                 deal_timer(timer, sockfd);
             }
             //处理信号 管道读端对应文件描述符发生读事件

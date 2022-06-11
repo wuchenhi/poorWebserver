@@ -21,67 +21,58 @@
 #include <sys/wait.h>
 #include <sys/uio.h>
 
-#include <vector>
 #include <time.h>
 #include "spdlog/spdlog.h"
 
-using namespace std;
-
-const int BUFFER_SIZE = 64;
 //利用alarm函数周期性地触发SIGALRM信号,
 //该信号的信号处理函数利用 管道 通知主循环执行定时器链表上的定时任务
 
 //连接资源结构体成员需要用到定时器类 前向声明
-class heap_timer;
+class util_timer;
 
-//定时器和socke绑定
+//连接资源结
 struct client_data {
     sockaddr_in address;  //客户端socket地址
     int sockfd;           //socket文件描述符
-    heap_timer *timer;    //定时器
-    //char buf[BUFFER_SIZE];
+    util_timer *timer;    //定时器
 };
 
 //定时器类
-class heap_timer {
+class util_timer {
 public:
-    heap_timer(int delay) {
-        expire = time(NULL) + delay;
-    }
+    util_timer() : prev(NULL), next(NULL) {}
 
 public:
-    time_t expire;                  //超时时间(绝对时间)
+    time_t expire;                  //超时时间
     void (* cb_func)(client_data *);//回调函数
     client_data *user_data;
+    util_timer *prev;
+    util_timer *next;
 };
 
 //定时器容器类
-class timer_heap {
+class sort_timer_lst {
 public:
-    timer_heap() {
-        vec.reserve(64);
-    }
-
-    ~timer_heap();
-    //添加定时器
-    void add_timer(heap_timer *timer);
+    sort_timer_lst();
+    ~sort_timer_lst();
+    //添加定时器，内部调用私有成员add_timer
+    void add_timer(util_timer *timer);
+    //调整定时器，任务发生变化时，调整定时器在链表中的位置
+    void adjust_timer(util_timer *timer);
     //heap
     //void doWork(int id);
-    void adjust_timer(heap_timer *timer);
-    void pop_timer();        
+    //void clear();
+    //void pop();        //类似于删除？
     //int GetNextTick(); //?
     //删除定时器
-    void del_timer(heap_timer *timer);
+    void del_timer(util_timer *timer);
     //定时任务处理函数
     void tick();
-    bool empty() const { return vec.empty(); }
-    //类似重载 []
-    heap_timer* at(int index) {
-        return vec[index];
-    }
+
 private:
-    //最小堆的下虑操作，确保数组中以底hole个节点为根的子树拥有最小堆性质
-    void percolate_down(int hole);
+    //被公有成员add_timer和adjust_time调用
+    void add_timer(util_timer *timer, util_timer *lst_head);
+    //头尾结点 无意义 方便内部调整
 
     //上滤 下滤 TODO
     //void del_(size_t i);
@@ -94,14 +85,14 @@ private:
 
     //std::vector<TimerNode> heap_;
     //std::unordered_map<int, size_t> ref_;
-    vector<heap_timer* > vec;
+    util_timer *head;
+    util_timer *tail;
 };
 
 class Utils {
 public:
-    Utils() = default;
-
-    ~Utils() = default;
+    Utils() {}
+    ~Utils() {}
 
     void init(int timeslot);
 
@@ -124,7 +115,7 @@ public:
 
 public:
     static int *u_pipefd;
-    timer_heap m_timer_lst;
+    sort_timer_lst m_timer_lst;
     static int u_epollfd;
     int m_TIMESLOT;
 };

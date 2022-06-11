@@ -1,97 +1,135 @@
 #include "lst_timer.h"
 #include "../http/http_conn.h"
 
-timer_heap::~timer_heap() {
-    vec.clear();
+sort_timer_lst::sort_timer_lst() {
+    head = NULL;
+    tail = NULL;
+}
+sort_timer_lst::~sort_timer_lst() {
+    util_timer *tmp = head;
+    while (tmp) {
+        head = tmp->next;
+        delete tmp;
+        tmp = head;
+    }
 }
 
-void timer_heap::add_timer(heap_timer *timer) {
+void sort_timer_lst::add_timer(util_timer *timer) {
     if (!timer) {
         return;
     }
-    vec.push_back(timer);
-    int hole = vec.size() -1;
-    int parent = 0;
-
-    //对从空穴到根节点的路径上所有节点执行上虑操作
-    for (; hole>0; hole = parent) {
-        parent = (hole-1)/2;
-        if (vec[parent]->expire <= timer->expire) {
-            break;
-        }
-        vec[hole] = vec[parent];
+    if (!head) {
+        head = tail = timer;
+        return;
     }
-    vec[hole] = timer;
+    if (timer->expire < head->expire) {
+        timer->next = head;
+        head->prev = timer;
+        head = timer;
+        return;
+    }
+    //否则调用私有成员，调整内部结点
+    add_timer(timer, head);
 }
-
-void timer_heap::del_timer(heap_timer *timer) {
+void sort_timer_lst::adjust_timer(util_timer *timer)
+{
     if (!timer) {
         return;
     }
-    //仅仅将目标定时器的回调函数设为空，即延迟销毁。能真正节省删除定时器的开销，但容易使堆数组膨胀
-    timer->cb_func = NULL;
-}
-
-void timer_heap::adjust_timer(heap_timer *timer) {
-    // 调整指定id的结点
-    //TODO  怎么知道这个timer的位置
-
-    //percolate_down(ref_[id], heap_.size()); 
-    percolate_down(0);
-}
-
-void timer_heap::pop_timer() {
-    if(empty()) {
+    util_timer *tmp = timer->next;
+    //被调整的定时器在链表尾部 //定时器超时值仍然小于下一个定时器超时值，不调整
+    if (!tmp || (timer->expire < tmp->expire)) {
         return;
     }
-    if(vec[0]) {
-        vec[0] = (vec.back());
-        percolate_down(0); /*对新的堆顶元素执行下虑操作*/
-        vec.pop_back();
+    //被调整定时器是链表头结点，将定时器取出，重新插入
+    if (timer == head) {
+        head = head->next;
+        head->prev = NULL;
+        timer->next = NULL;
+        add_timer(timer, head);
+    }
+    //被调整定时器在内部，将定时器取出，重新插入
+    else {
+        timer->prev->next = timer->next;
+        timer->next->prev = timer->prev;
+        add_timer(timer, timer->next);
     }
 }
+void sort_timer_lst::del_timer(util_timer *timer) {
+    if (!timer) {
+        return;
+    }
+    if ((timer == head) && (timer == tail)) {
+        delete timer;
+        head = NULL;
+        tail = NULL;
+        return;
+    }
+    if (timer == head) {
+        head = head->next;
+        head->prev = NULL;
+        delete timer;
+        return;
+    }
+    if (timer == tail) {
+        tail = tail->prev;
+        tail->next = NULL;
+        delete timer;
+        return;
+    }
+    //被删除的定时器在链表内部
+    timer->prev->next = timer->next;
+    timer->next->prev = timer->prev;
+    delete timer;
+}
 
-void timer_heap::tick() {
-
+void sort_timer_lst::tick() {
+    if (!head) {
+        return;
+    }
     //获取当前时间
     time_t cur = time(NULL);
-    heap_timer* tmp = vec[0];
+    util_timer *tmp = head;
     while (tmp) {
-        if(!tmp) {
+        //当前时间小于定时器的超时时间，后面的定时器也没有到期
+        if (cur < tmp->expire) {
             break;
         }
-        //如果堆定时器没到期，则退出循环
-        if (tmp->expire > cur) {
-            break;
+        //当前定时器到期，则调用回调函数，执行定时事件
+        tmp->cb_func(tmp->user_data);
+        //将处理后的定时器从链表容器中删除，并重置头结点
+        head = tmp->next;
+        if (head) {
+            head->prev = NULL;
         }
-        //否则执行堆顶定时器中的任务
-        if (vec[0] -> cb_func) {
-            vec[0]->cb_func(vec[0]->user_data);//?
-        }
-        //堆顶定时器删除
-        pop_timer();
-        //生成新的堆顶定时器
-        tmp = vec[0];
+        delete tmp;
+        tmp = head;
     }
 }
 
-void timer_heap::percolate_down(int hole) {
-    heap_timer* temp = vec[hole];
-    int child = 0;
-    int cur_size = vec.size();
-    for (;((hole*2+1) <= (cur_size-1)); hole = child) {
-        child = hole * 2 + 1;
-        if((child < (cur_size-1)) && (vec[child+1]->expire < vec[hole]->expire)) {
-            ++child;
-        }
-        if (vec[child]->expire < temp->expire) {
-            vec[hole] = vec[child];
-        }
-        else {
+void sort_timer_lst::add_timer(util_timer *timer, util_timer *lst_head) {
+    util_timer *prev = lst_head;
+    util_timer *tmp = prev->next;
+    //遍历当前结点之后的链表，按照超时时间找到目标定时器对应的位置插入
+    while (tmp)
+    {
+        if (timer->expire < tmp->expire) {
+            prev->next = timer;
+            timer->next = tmp;
+            tmp->prev = timer;
+            timer->prev = prev;
             break;
         }
+        prev = tmp;
+        tmp = tmp->next;
     }
-    vec[hole] = temp;
+    //目标定时器需放在尾结点处
+    if (!tmp) {
+        prev->next = timer;
+        timer->prev = prev;
+        timer->next = NULL;
+        tail = timer;
+    }
 }
 
 void Utils::init(int timeslot) {

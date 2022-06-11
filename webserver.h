@@ -21,7 +21,21 @@ const int TIMESLOT = 5;             //最小超时单位
 class WebServer
 {
 public:
-    WebServer();
+    WebServer(int x) {
+        //http_conn类对象users
+        users = new http_conn[MAX_FD];
+
+        //root文件夹路径存在m_root里
+        char server_path[200];
+        getcwd(server_path, 200);//当前工作目录的绝对路径复制到server_path所指的内存空间中
+        char root[6] = "/root";
+        m_root = (char *)malloc(strlen(server_path) + strlen(root) + 1);
+        strcpy(m_root, server_path);//char *strcpy(char *dest, const char *src)
+        strcat(m_root, root);   // root 所指向的字符串追加到 m_root 所指向的字符串的结尾
+
+        //定时器对象users_timer
+        users_timer = new client_data[MAX_FD];
+    }
     ~WebServer();
 
     void init(int port , string user, string passWord, string databaseName,
@@ -32,8 +46,8 @@ public:
     void eventListen();
     void eventLoop();
     void timer(int connfd, struct sockaddr_in client_address);
-    void adjust_timer(util_timer *timer);
-    void deal_timer(util_timer *timer, int sockfd);
+    void adjust_timer(heap_timer *timer);
+    void deal_timer(heap_timer *timer, int sockfd);
     bool dealclinetdata();
     bool dealwithsignal(bool& timeout, bool& stop_server);
     void dealwithread(int sockfd);
