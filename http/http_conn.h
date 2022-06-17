@@ -23,7 +23,7 @@
 #include <map>
 #include "spdlog/spdlog.h"
 #include "../locker.h"
-#include "../mysql/sql_connection_pool.h"
+#include "../CGImysql/sql_connection_pool.h"
 #include "../timer/lst_timer.h"
 
 //主状态机在内部调用从状态机,从状态机将处理状态和数据传给主状态机
@@ -40,7 +40,43 @@ public:
     static const int READ_BUFFER_SIZE = 2048;
     //设置写缓冲区m_write_buf大小
     static const int WRITE_BUFFER_SIZE = 1024;
-
+    
+    enum METHOD
+    {
+        GET = 0,
+        POST,
+        HEAD,
+        PUT,
+        DELETE,
+        TRACE,
+        OPTIONS,
+        CONNECT,
+        PATH
+    };
+    enum CHECK_STATE
+    {
+        CHECK_STATE_REQUESTLINE = 0,
+        CHECK_STATE_HEADER,
+        CHECK_STATE_CONTENT
+    };
+    enum HTTP_CODE
+    {
+        NO_REQUEST,
+        GET_REQUEST,
+        BAD_REQUEST,
+        NO_RESOURCE,
+        FORBIDDEN_REQUEST,
+        FILE_REQUEST,
+        INTERNAL_ERROR,
+        CLOSED_CONNECTION
+    };
+    enum LINE_STATUS
+    {
+        LINE_OK = 0,
+        LINE_BAD,
+        LINE_OPEN
+    };
+    /*
     //报文的请求方法，目前只有GET和POST
     enum class METHOD {
         GET = 0,
@@ -61,13 +97,13 @@ public:
     };
     //报文解析的结果
     enum class HTTP_CODE {
-        NO_REQUEST,         //请求不完整，需要继续读取请求报文数据 跳转主线程继续监测读事件
-        GET_REQUEST,        //获得了完整的HTTP请求,调用do_request完成请求资源映射
-        BAD_REQUEST,        //HTTP请求报文有语法错误或请求资源为目录,跳转process_write完成响应报文
-        NO_RESOURCE,        //请求资源不存在,跳转process_write完成响应报文
-        FORBIDDEN_REQUEST,  //请求资源禁止访问，没有读取权限,跳转process_write完成响应报文
-        FILE_REQUEST,       //请求资源可以正常访问,跳转process_write完成响应报文
-        INTERNAL_ERROR,     //服务器内部错误，该结果在主状态机逻辑switch的default下，一般不会触发
+        NO_REQUEST,
+        GET_REQUEST,
+        BAD_REQUEST,
+        NO_RESOURCE,
+        FORBIDDEN_REQUEST,
+        FILE_REQUEST,
+        INTERNAL_ERROR,
         CLOSED_CONNECTION
     };
     //从状态机的状态
@@ -76,7 +112,7 @@ public:
         BAD,    //报文语法有误
         OPEN    //不完整行
     };
- 
+    */
 public:
     http_conn() = default;
     ~http_conn() = default;
@@ -131,7 +167,7 @@ private:
     bool add_blank_line();
 
 public:
-    static int m_epollfd;     //epoll
+    static int m_epollfd;
     static int m_user_count;
     MYSQL *mysql;
     int m_state;  //读为0, 写为1
@@ -167,11 +203,7 @@ private:
     //读取服务器上的文件地址
     char *m_file_address;
     struct stat m_file_stat;
-    //io向量机制iovec 定义了一个向量元素，通常，这个结构用作一个多元素的数组。
-    //struct iovec {
-    //    void      *iov_base;  starting address of buffer iov_base指向数据的地址
-    //    size_t    iov_len;    size of buffer             iov_len表示数据的长度
-    //};
+    //io向量机制iovec
     struct iovec m_iv[2];
     int m_iv_count;
     //是否启用的POST

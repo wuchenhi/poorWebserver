@@ -6,7 +6,7 @@
 #include <exception>
 #include <pthread.h>
 #include "locker.h"
-#include "mysql/sql_connection_pool.h"
+#include "CGImysql/sql_connection_pool.h"
 
 
 #include "spdlog/spdlog.h"

@@ -21,87 +21,55 @@
 #include <sys/wait.h>
 #include <sys/uio.h>
 
-#include <vector>
 #include <time.h>
 #include "spdlog/spdlog.h"
 
-using namespace std;
+class util_timer;
 
-const int BUFFER_SIZE = 64;
-//利用alarm函数周期性地触发SIGALRM信号,
-//该信号的信号处理函数利用 管道 通知主循环执行定时器链表上的定时任务
-
-//连接资源结构体成员需要用到定时器类 前向声明
-class heap_timer;
-
-//定时器和socke绑定
-struct client_data {
-    sockaddr_in address;  //客户端socket地址
-    int sockfd;           //socket文件描述符
-    heap_timer *timer;    //定时器
-    //char buf[BUFFER_SIZE];
+struct client_data
+{
+    sockaddr_in address;
+    int sockfd;
+    util_timer *timer;
 };
 
-//定时器类
-class heap_timer {
+class util_timer
+{
 public:
-    heap_timer(int delay) {
-        expire = time(NULL) + delay;
-    }
+    util_timer() : prev(NULL), next(NULL) {}
 
 public:
-    time_t expire;                  //超时时间(绝对时间)
-    void (* cb_func)(client_data *);//回调函数
-    client_data *user_data;
-};
-
-//定时器容器类
-class timer_heap {
-public:
-    timer_heap() {
-        vec.reserve(64);
-    }
-
-    ~timer_heap();
-    //添加定时器
-    void add_timer(heap_timer *timer);
-    //heap
-    //void doWork(int id);
-    void adjust_timer(heap_timer *timer);
-    void pop_timer();        
-    //int GetNextTick(); //?
-    //删除定时器
-    void del_timer(heap_timer *timer);
-    //定时任务处理函数
-    void tick();
-    bool empty() const { return vec.empty(); }
-    //类似重载 []
-    heap_timer* at(int index) {
-        return vec[index];
-    }
-private:
-    //最小堆的下虑操作，确保数组中以底hole个节点为根的子树拥有最小堆性质
-    void percolate_down(int hole);
-
-    //上滤 下滤 TODO
-    //void del_(size_t i);
+    time_t expire;
     
-    //void siftup_(size_t i);
-
-    //bool siftdown_(size_t index, size_t n);
-
-    //void SwapNode_(size_t i, size_t j);
-
-    //std::vector<TimerNode> heap_;
-    //std::unordered_map<int, size_t> ref_;
-    vector<heap_timer* > vec;
+    void (* cb_func)(client_data *);
+    client_data *user_data;
+    util_timer *prev;
+    util_timer *next;
 };
 
-class Utils {
+class sort_timer_lst
+{
 public:
-    Utils() = default;
+    sort_timer_lst();
+    ~sort_timer_lst();
 
-    ~Utils() = default;
+    void add_timer(util_timer *timer);
+    void adjust_timer(util_timer *timer);
+    void del_timer(util_timer *timer);
+    void tick();
+
+private:
+    void add_timer(util_timer *timer, util_timer *lst_head);
+
+    util_timer *head;
+    util_timer *tail;
+};
+
+class Utils
+{
+public:
+    Utils() {}
+    ~Utils() {}
 
     void init(int timeslot);
 
@@ -124,7 +92,7 @@ public:
 
 public:
     static int *u_pipefd;
-    timer_heap m_timer_lst;
+    sort_timer_lst m_timer_lst;
     static int u_epollfd;
     int m_TIMESLOT;
 };

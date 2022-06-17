@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     Config config;
     config.parse_arg(argc, argv);
 
-    WebServer server(5);
+    WebServer server;
     //端口号
     //数据库连接池数量 sql_num
     //线程池内的线程数量 thread_num

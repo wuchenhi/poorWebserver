@@ -4,8 +4,8 @@ Config::Config(){
     //端口号,默认9001
     PORT = 9001;
 
-    //数据库连接池数量,默认10
-    sql_num = 10;
+    //数据库连接池数量,默认8
+    sql_num = 8;
 
     //线程池内的线程数量,根据硬件确定
     thread_num = std::thread::hardware_concurrency();
