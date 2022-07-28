@@ -1,5 +1,5 @@
-#ifndef m_CONNECTION_POOL_
-#define m_CONNECTION_POOL_
+#ifndef M_CONNECTION_POOL_H
+#define M_CONNECTION_POOL_H
 
 #include <stdio.h>
 #include <deque>

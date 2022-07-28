@@ -1,5 +1,5 @@
-#ifndef m_CONFIG_H
-#define m_CONFIG_H
+#ifndef M_CONFIG_H
+#define M_CONFIG_H
 
 #include "webserver.h"
 

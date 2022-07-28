@@ -1,5 +1,5 @@
-#ifndef m_HTTPCONNECTION_H
-#define m_HTTPCONNECTION_H
+#ifndef M_HTTPCONNECTION_H
+#define M_HTTPCONNECTION_H
 
 #include <unistd.h>
 #include <signal.h>

@@ -419,15 +419,7 @@ http_conn::HTTP_CODE http_conn::do_request() {
 
         free(m_url_real);
     }
-    else if (*(p + 1) == '7') {
-        char *m_url_real = (char *)malloc(sizeof(char) * 200);
-        strcpy(m_url_real, "/fans.html");
-        strncpy(m_real_file + len, m_url_real, strlen(m_url_real));
-
-        free(m_url_real);
-    }
-    else
-        strncpy(m_real_file + len, m_url, FILENAME_LEN - len - 1);
+    else strncpy(m_real_file + len, m_url, FILENAME_LEN - len - 1);
 
     if (stat(m_real_file, &m_file_stat) < 0)
         return NO_RESOURCE;
@@ -463,8 +455,7 @@ bool http_conn::write() {
         temp = writev(m_sockfd, m_iv, m_iv_count);
 
         if (temp < 0) {
-            if (errno == EAGAIN)
-            {
+            if (errno == EAGAIN) {
                 modfd(m_epollfd, m_sockfd, EPOLLOUT);
                 return true;
             }
@@ -488,13 +479,10 @@ bool http_conn::write() {
             unmap();
             modfd(m_epollfd, m_sockfd, EPOLLIN);
 
-            if (m_linger)
-            {
+            if (m_linger) {
                 init();
                 return true;
-            }
-            else
-            {
+            } else {
                 return false;
             }
         }

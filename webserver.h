@@ -1,5 +1,5 @@
-#ifndef m_WEBSERVER_H
-#define m_WEBSERVER_H
+#ifndef M_WEBSERVER_H
+#define M_WEBSERVER_H
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -18,8 +18,7 @@ const int MAX_FD = 65536;           //最大文件描述符
 const int MAX_EVENT_NUMBER = 10000; //最大事件数
 const int TIMESLOT = 5;             //最小超时单位
 
-class WebServer
-{
+class WebServer {
 public:
     WebServer();
     ~WebServer();

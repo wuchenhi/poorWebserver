@@ -1,5 +1,5 @@
-#ifndef m_THREADPOOL_H
-#define m_THREADPOOL_H
+#ifndef M_THREADPOOL_H
+#define M_THREADPOOL_H
 
 #include <deque>
 #include <cstdio>
@@ -7,7 +7,6 @@
 #include <pthread.h>
 #include "locker.h"
 #include "CGImysql/sql_connection_pool.h"
-
 
 #include "spdlog/spdlog.h"
 
