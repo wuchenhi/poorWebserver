@@ -1,6 +1,6 @@
-## webserver
+## WebServer
 
-### 并发模型采用 线程池 + 非阻塞socket + ET epoll + Reactor事件处理 
+### 并发模型采用 线程池 + 非阻塞socket + ET epoll + Reactor事件处理
 
 ### HTTP支持GET、POST，POST请求用于请求登录和注册功能
 
