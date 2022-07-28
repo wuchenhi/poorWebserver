@@ -33,34 +33,25 @@
   测试前确认已安装MySQL数据库
 
 ```C++
-  //有必要可以先创建一个用户，如
-
+  -- 有必要可以先创建一个用户，如
   CREATE USER 'wuyi'@'LOCALHOST' IDENTIFIED BY 'Wch@0824';
   update mysql.user set Host='%' 
   where User='wuyi' and Host='localhost';
 
-  //给予权限
-  grant all privileges on *.* to wuyi@'%'；
-  // 建立yourdb库
-
+  -- 给予权限
+  grant all privileges on *.* to wuyi@'%';
+  -- 建立yourdb库
   create database yourdb;
 
-
-  // 创建user表
-
+  -- 创建user表
   USE yourdb;
 
   CREATE TABLE user(
-
       username char(50) NULL,
-
       passwd char(50) NULL
-
   )ENGINE=InnoDB;
 
-
-  // 添加数据
-
+  -- 添加数据
   INSERT INTO user(username, passwd) VALUES('name', 'passwd');
 
 ```
