@@ -1,4 +1,4 @@
-#include "config.h"
+#include "configure/configure.h"
 
 int main(int argc, char *argv[])
 {

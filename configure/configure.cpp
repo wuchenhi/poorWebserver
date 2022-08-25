@@ -1,4 +1,4 @@
-#include "config.h"
+#include "configure.h"
 
 Config::Config(){
     //端口号,默认9001
