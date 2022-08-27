@@ -23,11 +23,10 @@ public:
     WebServer();
     ~WebServer();
 
-    void init(int port , string user, string passWord, string databaseName,
-              int sql_num, int thread_num);
+    void init(int port , int redis_num, int thread_num);
 
     void thread_pool();
-    void sql_pool();
+    void redis_pool();
     void eventListen();
     void eventLoop();
     void timer(int connfd, struct sockaddr_in client_address);
@@ -49,10 +48,7 @@ public:
 
     //数据库相关
     connection_pool *m_connPool;
-    string m_user;         //登陆数据库用户名
-    string m_passWord;     //登陆数据库密码
-    string m_databaseName; //使用数据库名
-    int m_sql_num;
+    int m_redis_num;
 
     //线程池相关
     threadpool<http_conn> *m_pool;

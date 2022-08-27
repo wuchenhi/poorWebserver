@@ -23,7 +23,7 @@
 #include <map>
 #include "spdlog/spdlog.h"
 #include "../locker.h"
-#include "../CGImysql/sql_connection_pool.h"
+#include "../CGIredis/redis.h"
 #include "../timer/lst_timer.h"
 
 //主状态机在内部调用从状态机,从状态机将处理状态和数据传给主状态机
@@ -40,45 +40,8 @@ public:
     static const int READ_BUFFER_SIZE = 2048;
     //设置写缓冲区m_write_buf大小
     static const int WRITE_BUFFER_SIZE = 1024;
-    
-    enum METHOD
-    {
-        GET = 0,
-        POST,
-        HEAD,
-        PUT,
-        DELETE,
-        TRACE,
-        OPTIONS,
-        CONNECT,
-        PATH
-    };
-    enum CHECK_STATE
-    {
-        CHECK_STATE_REQUESTLINE = 0,
-        CHECK_STATE_HEADER,
-        CHECK_STATE_CONTENT
-    };
-    enum HTTP_CODE
-    {
-        NO_REQUEST,
-        GET_REQUEST,
-        BAD_REQUEST,
-        NO_RESOURCE,
-        FORBIDDEN_REQUEST,
-        FILE_REQUEST,
-        INTERNAL_ERROR,
-        CLOSED_CONNECTION
-    };
-    enum LINE_STATUS
-    {
-        LINE_OK = 0,
-        LINE_BAD,
-        LINE_OPEN
-    };
-    /*
     //报文的请求方法，目前只有GET和POST
-    enum class METHOD {
+    enum METHOD {
         GET = 0,
         POST,
         HEAD,
@@ -90,13 +53,13 @@ public:
         PATH
     };
     //主状态机的状态
-    enum class CHECK_STATE {
-        REQUESTLINE = 0, //解析请求行
-        HEADER,          //解析请求头
-        CONTENT          //POST时 解析消息体
+    enum CHECK_STATE {
+        CHECK_STATE_REQUESTLINE = 0, //解析请求行
+        CHECK_STATE_HEADER,          //解析请求头
+        CHECK_STATE_CONTENT          //POST时 解析消息体
     };
-    //报文解析的结果
-    enum class HTTP_CODE {
+     //报文解析的结果
+    enum HTTP_CODE {
         NO_REQUEST,
         GET_REQUEST,
         BAD_REQUEST,
@@ -107,19 +70,18 @@ public:
         CLOSED_CONNECTION
     };
     //从状态机的状态
-    enum class LINE_STATUS {
-        OK = 0, //完整行
-        BAD,    //报文语法有误
-        OPEN    //不完整行
+    enum LINE_STATUS {
+        LINE_OK = 0, //完整行
+        LINE_BAD,    //报文语法有误
+        LINE_OPEN    //不完整行
     };
-    */
 public:
     http_conn() = default;
     ~http_conn() = default;
 
 public:
     //初始化套接字地址，函数内部会调用私有方法init
-    void init(int sockfd, const sockaddr_in &addr, char *, string user, string passwd, string sqlname);
+    void init(int sockfd, const sockaddr_in &addr, char *);
     //关闭http连接
     void close_conn(bool real_close = true);
     void process();
@@ -129,8 +91,7 @@ public:
     sockaddr_in *get_address() {
         return &m_address;
     }
-    //同步线程初始化数据库读取表
-    void initmysql_result(connection_pool *connPool);
+
     int timer_flag;
     int improv;
 
@@ -169,7 +130,8 @@ private:
 public:
     static int m_epollfd;
     static int m_user_count;
-    MYSQL *mysql;
+    redisContext* redis;
+   // MYSQL *mysql;
     int m_state;  //读为0, 写为1
 
 private:
@@ -215,11 +177,6 @@ private:
     //已发送字节数
     int bytes_have_send;
     char *doc_root;
-
-    map<string, string> m_users;
-    char sql_user[100];
-    char sql_passwd[100];
-    char sql_name[100];
 };
 
 #endif

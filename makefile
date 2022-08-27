@@ -9,8 +9,8 @@ else
 
 endif
 
-server: main.cpp  ./timer/lst_timer.cpp ./http/http_conn.cpp  ./CGImysql/sql_connection_pool.cpp  ./webserver/webserver.cpp ./configure/configure.cpp
-	$(CXX) -o server  $^ $(CXXFLAGS) -lpthread -lmysqlclient
+server: main.cpp  ./timer/lst_timer.cpp ./http/http_conn.cpp  ./CGIredis/redis.cpp  ./webserver/webserver.cpp ./configure/configure.cpp
+	$(CXX) -o server  $^ $(CXXFLAGS) -lpthread -lhiredis
 
 clean:
 	rm -r server

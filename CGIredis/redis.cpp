@@ -1,4 +1,3 @@
-#include <mysql/mysql.h>
 #include <stdio.h>
 #include <string>
 #include <string.h>
@@ -6,7 +5,7 @@
 #include <deque>
 #include <pthread.h>
 #include <iostream>
-#include "sql_connection_pool.h"
+#include "redis.h"
 
 using namespace std;
 
@@ -21,28 +20,17 @@ connection_pool *connection_pool::GetInstance() {
 }
 
 //初始化
-void connection_pool::init(string url, string User, string PassWord, string DBName, int Port, int MaxConn) {
+void connection_pool::init(string url, int Port, int MaxConn) {
 	m_url = url;
 	m_Port = Port;
-	m_User = User;
-	m_PassWord = PassWord;
-	m_DatabaseName = DBName;
 
-	for (int i = 0; i < MaxConn; i++) {
-		MYSQL *con = NULL;
-		con = mysql_init(con);
-
-		if (con == NULL) {
-            spdlog::error("MySQL error");
-			exit(1);
+	for (int i = 0; i < MaxConn; ++i) {
+        redisContext* redis =  redisConnect(m_url.c_str(), m_Port);
+        if(redis != nullptr &&redis ->err) {
+            std::cout << "connect error: " << redis ->errstr << std::endl;
+			return;
 		}
-		con = mysql_real_connect(con, url.c_str(), User.c_str(), PassWord.c_str(), DBName.c_str(), Port, NULL, 0);
-
-		if (con == NULL) {
-			spdlog::error("MySQL error");
-			exit(1);
-		}
-		connDeque.push_back(con);
+		connDeque.push_back(redis);
 		++m_FreeConn;
 	}
 
@@ -52,17 +40,15 @@ void connection_pool::init(string url, string User, string PassWord, string DBNa
 }
 
 //当有请求时，从数据库连接池中返回一个可用连接，更新使用和空闲连接数
-MYSQL *connection_pool::GetConnection() {
-	MYSQL *con = NULL;
-
+redisContext *connection_pool::GetConnection() {
 	if (connDeque.size() == 0)
-		return NULL;
+		return nullptr;
 
 	reserve.wait();
 	
 	lock.lock();
 
-	con = connDeque.front();
+	redisContext *con = connDeque.front();
 	connDeque.pop_front();
 
 	--m_FreeConn;
@@ -73,8 +59,8 @@ MYSQL *connection_pool::GetConnection() {
 }
 
 //释放当前使用的连接
-bool connection_pool::ReleaseConnection(MYSQL *con) {
-	if (NULL == con)
+bool connection_pool::ReleaseConnection(redisContext *con) {
+	if (con == nullptr) 
 		return false;
 
 	lock.lock();
@@ -95,11 +81,11 @@ void connection_pool::DestroyPool() {
 	lock.lock();
 	if (connDeque.size() > 0)
 	{
-		deque<MYSQL *>::iterator it;
-		for (it = connDeque.begin(); it != connDeque.end(); ++it)
-		{
-			MYSQL *con = *it;
-			mysql_close(con);
+		deque<redisContext *>::iterator it;
+		for (it = connDeque.begin(); it != connDeque.end(); ++it) {
+			redisContext *con = *it;
+			con = nullptr;
+            //? 关闭连接
 		}
 		m_CurConn = 0;
 		m_FreeConn = 0;
@@ -117,10 +103,10 @@ connection_pool::~connection_pool() {
 	DestroyPool();
 }
 
-connectionRAII::connectionRAII(MYSQL **SQL, connection_pool *connPool) {
-	*SQL = connPool->GetConnection();
+connectionRAII::connectionRAII(redisContext **REDIS, connection_pool *connPool) {
+	*REDIS = connPool->GetConnection();
 	
-	conRAII = *SQL;
+	conRAII = *REDIS;
 	poolRAII = connPool;
 }
 

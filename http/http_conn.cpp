@@ -1,8 +1,6 @@
-#include "http_conn.h"
-
-#include <mysql/mysql.h>
+#include <hiredis/hiredis.h>
 #include <fstream>
-
+#include "http_conn.h"
 //定义http响应的一些状态信息
 const char *ok_200_title = "OK";
 const char *error_400_title = "Bad Request";
@@ -15,34 +13,6 @@ const char *error_500_title = "Internal Error";
 const char *error_500_form = "There was an unusual problem serving the request file.\n";
 
 locker m_lock;
-map<string, string> users;
-
-void http_conn::initmysql_result(connection_pool *connPool) {
-    //先从连接池中取一个连接
-    MYSQL *mysql = NULL;
-    connectionRAII mysqlcon(&mysql, connPool);
-
-    //在user表中检索username，passwd数据，浏览器端输入
-    if (mysql_query(mysql, "SELECT username,passwd FROM user")) {
-        spdlog::error("SELECT error: {0}", mysql_error(mysql));
-    }
-
-    //从表中检索完整的结果集
-    MYSQL_RES *result = mysql_store_result(mysql);
-
-    //返回结果集中的列数
-    int num_fields = mysql_num_fields(result);
-
-    //返回所有字段结构的数组
-    MYSQL_FIELD *fields = mysql_fetch_fields(result);
-
-    //从结果集中获取下一行，将对应的用户名和密码，存入map中
-    while (MYSQL_ROW row = mysql_fetch_row(result)) {
-        string temp1(row[0]);
-        string temp2(row[1]);
-        users[temp1] = temp2;
-    }
-}
 
 //对文件描述符设置非阻塞
 int setnonblocking(int fd) {
@@ -95,8 +65,7 @@ void http_conn::close_conn(bool real_close) {
 }
 
 //初始化连接,外部调用初始化套接字地址
-void http_conn::init(int sockfd, const sockaddr_in &addr, char *root, 
-                    string user, string passwd, string sqlname) {
+void http_conn::init(int sockfd, const sockaddr_in &addr, char *root) {
     m_sockfd = sockfd;
     m_address = addr;
 
@@ -106,17 +75,13 @@ void http_conn::init(int sockfd, const sockaddr_in &addr, char *root,
     //当浏览器出现连接重置时，可能是网站根目录出错或http响应格式出错或者访问的文件中内容完全为空
     doc_root = root;
 
-    strcpy(sql_user, user.c_str());
-    strcpy(sql_passwd, passwd.c_str());
-    strcpy(sql_name, sqlname.c_str());
-
     init();
 }
 
 //初始化新接受的连接
 //check_state默认为分析请求行状态
 void http_conn::init() {
-    mysql = NULL;
+    redis = NULL;
     bytes_to_send = 0;
     bytes_have_send = 0;
     m_check_state = CHECK_STATE_REQUESTLINE;
@@ -304,8 +269,7 @@ http_conn::HTTP_CODE http_conn::process_read() {
             ret = parse_headers(text);
             if (ret == BAD_REQUEST)
                 return BAD_REQUEST;
-            else if (ret == GET_REQUEST)
-            {
+            else if (ret == GET_REQUEST) {
                 return do_request();
             }
             break;
@@ -358,36 +322,26 @@ http_conn::HTTP_CODE http_conn::do_request() {
         if (*(p + 1) == '3') {
             //如果是注册，先检测数据库中是否有重名的
             //没有重名的，进行增加数据
-            char *sql_insert = (char *)malloc(sizeof(char) * 200);
-            strcpy(sql_insert, "INSERT INTO user(username, passwd) VALUES(");
-            strcat(sql_insert, "'");
-            strcat(sql_insert, name);
-            strcat(sql_insert, "', '");
-            strcat(sql_insert, password);
-            strcat(sql_insert, "')");
-
-            if (users.find(name) == users.end())
-            {
+            redisReply* reply = static_cast<redisReply*>(redisCommand(redis, "GET %s", name));
+            if(reply->str == nullptr) {
                 m_lock.lock();
-                int res = mysql_query(mysql, sql_insert);
-                users.insert(pair<string, string>(name, password));
+                redisCommand(redis, "SET %s %s", name, password);
                 m_lock.unlock();
-
-                if (!res)
-                    strcpy(m_url, "/log.html");
-                else
-                    strcpy(m_url, "/registerError.html");
-            }
-            else
+                strcpy(m_url, "/log.html");
+            }else
                 strcpy(m_url, "/registerError.html");
         }
         //如果是登录，直接判断
         //若浏览器端输入的用户名和密码在表中可以查找到，返回1，否则返回0
         else if (*(p + 1) == '2') {
-            if (users.find(name) != users.end() && users[name] == password)
+            redisReply* reply = static_cast<redisReply*>(redisCommand(redis, "GET %s", name));
+            std::string ch = reply->str;
+            std::string passwdStr = password;
+            if(reply->str == passwdStr) {
                 strcpy(m_url, "/welcome.html");
-            else
+            }else
                 strcpy(m_url, "/logError.html");
+            
         }
     }
 
@@ -436,8 +390,7 @@ http_conn::HTTP_CODE http_conn::do_request() {
     return FILE_REQUEST;
 }
 void http_conn::unmap() {
-    if (m_file_address)
-    {
+    if (m_file_address) {
         munmap(m_file_address, m_file_stat.st_size);
         m_file_address = 0;
     }

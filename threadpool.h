@@ -6,7 +6,7 @@
 #include <exception>
 #include <pthread.h>
 #include "locker.h"
-#include "CGImysql/sql_connection_pool.h"
+#include "CGIredis/redis.h"
 
 #include "spdlog/spdlog.h"
 
@@ -127,7 +127,7 @@ void threadpool<T>::run() {
         if (0 == request->m_state) {
             if (request->read_once()) {
                 request->improv = 1;
-                connectionRAII mysqlcon(&request->mysql, m_connPool);
+                connectionRAII myrediscon(&request->redis, m_connPool);
                 request->process();
             }
             else {
