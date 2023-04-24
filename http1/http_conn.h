@@ -157,7 +157,7 @@ private:
     //以下为解析请求报文中对应的6个变量
     //存储读取文件的名称
     char m_real_file[FILENAME_LEN];
-    char *m_url;   //
+    char *m_url;
     char *m_version;
     char *m_host;
     int m_content_length;

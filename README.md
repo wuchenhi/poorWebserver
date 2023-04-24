@@ -2,13 +2,13 @@
 
 ### 并发模型采用 线程池 + 非阻塞socket + ET epoll + Reactor事件处理
 
-### HTTP支持GET、POST，POST请求用于请求登录和注册功
+### HTTP支持GET、POST，POST请求用于请求登录和注册功能
 
 ### 用RAII封装锁、信号量，创建时自动调用构造函数，超出作用域自动调用析构函数，安全管理资源
 
 ### 多线程模型，使用线程池，空间换时间，工作线程在请求队列上，当有任务到来时，通过竞争获得任务的接管权
 
-### WebBench测压 用Redis数据库代替mysql数据库，WebBench速度提升一倍
+### 用Redis数据库代替mysql数据库，WebBench测压速度提升一倍
 
 ### 日志采用spdlog，只用包含头文件即可
 
