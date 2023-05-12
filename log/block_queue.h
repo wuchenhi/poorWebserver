@@ -1,5 +1,5 @@
-#ifndef BLOCK_QUEUE_H
-#define BLOCK_QUEUE_H
+#ifndef M_BLOCK_QUEUE_H
+#define M_BLOCK_QUEUE_H
 
 #include <sys/time.h>
 #include "../locker.h"

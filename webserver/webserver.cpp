@@ -1,7 +1,7 @@
 #include "webserver.h"
 
 WebServer::WebServer() {
-    //http_conn类对象 TODO
+    //http_conn类对象
     users = new http_conn[MAX_FD];
 
     //root文件夹路径
@@ -122,8 +122,7 @@ void WebServer::adjust_timer(util_timer *timer) {
 
 void WebServer::deal_timer(util_timer *timer, int sockfd) {
     timer->cb_func(&users_timer[sockfd]);
-    if (timer)
-    {
+    if (timer) {
         utils.m_timer_lst.del_timer(timer);
     }
     spdlog::info("close fd{0}", users_timer[sockfd].sockfd);
@@ -202,8 +201,7 @@ void WebServer::dealwithread(int sockfd) {
     }
 }
 
-void WebServer::dealwithwrite(int sockfd)
-{
+void WebServer::dealwithwrite(int sockfd) {
     util_timer *timer = users_timer[sockfd].timer;
     //reactor
     if (timer) {
@@ -213,8 +211,8 @@ void WebServer::dealwithwrite(int sockfd)
     m_pool->append(users + sockfd, 1);
 
     while (true) {
-        if (1 == users[sockfd].improv) {
-            if (1 == users[sockfd].timer_flag) {
+        if (users[sockfd].improv == 1) {
+            if (users[sockfd].timer_flag == 1) {
                 deal_timer(timer, sockfd);
                 users[sockfd].timer_flag = 0;
             }
@@ -242,7 +240,7 @@ void WebServer::eventLoop() {
             //处理新到的客户连接
             if (sockfd == m_listenfd) {
                 bool flag = dealclinetdata();
-                if (false == flag)
+                if (flag == false)
                     continue;
             }
             else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {

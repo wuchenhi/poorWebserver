@@ -117,9 +117,8 @@ void threadpool<T>::run() {
         m_queuelocker.unlock();
         if (!request)
             continue;
-        //reactor模式中，主线程(I/O处理单元)只负责监听文件描述符上是否有事件发生，
-        //有的话立即通知工作线程(逻辑单元 )，读写数据、接受新连接及处理客户请求均在工作线程中完成。
-        //通常由同步I/O实现。
+        //reactor模式中，主线程(I/O处理单元)只负责监听文件描述符上是否有事件发生
+        //有的话立即通知工作线程(逻辑单元 )，读写数据、接受新连接及处理客户请求均在工作线程中完成 通常由同步I/O实现
         //state 读为0, 写为1
         if (request->m_state == 0) {
             if (request->read_once()) {

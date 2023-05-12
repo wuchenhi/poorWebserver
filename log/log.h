@@ -1,5 +1,5 @@
-#ifndef LOG_H
-#define LOG_H
+#ifndef M_LOG_H
+#define M_LOG_H
 
 #include "block_queue.h"
 
