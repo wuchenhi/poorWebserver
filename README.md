@@ -10,12 +10,6 @@
 
 ### 用Redis数据库代替mysql数据库，WebBench测压速度提升一倍
 
-### 日志采用spdlog，只用包含头文件即可
-
-[gabime/spdlog: Fast C++ logging library. (github.com)](https://github.com/gabime/spdlog)
-
-将源码的include中的spdlog文件夹整个复制到/usr/include/目录下，包含头文件即可,如 #include"spdlog/spdlog.h"
-
 ### 内存泄露检测 LeakSanitizer
 
  -fsanitize=address -g
@@ -28,7 +22,7 @@
 
 * Ubuntu版本 20.04
 * Redis 版本 5.0.7
-  测试前确认已启用Redis数据库
+  测试前确认已启用Redis数据库edis-server
 
 ```
 make

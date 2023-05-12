@@ -21,7 +21,8 @@
 #include <sys/wait.h>
 #include <sys/uio.h>
 #include <map>
-#include "spdlog/spdlog.h"
+// #include "spdlog/spdlog.h"
+#include "../log/log.h"
 #include "../locker.h"
 #include "../CGIredis/redis.h"
 #include "../timer/lst_timer.h"
@@ -177,6 +178,8 @@ private:
     //已发送字节数
     int bytes_have_send;
     char *doc_root;
+
+    int m_close_log;
 };
 
 #endif

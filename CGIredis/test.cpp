@@ -5,6 +5,7 @@
 void initredis_result(connection_pool *connPool) {
     //先从连接池中取一个连接
     redisContext *redis = nullptr;
+
     //redis = connPool->GetConnection();
     connectionRAII rediscon(&redis, connPool);
     
@@ -22,13 +23,14 @@ void initredis_result(connection_pool *connPool) {
     }
 	std::string str = reply->str;
 	freeReplyObject(reply);
+
     if(str.empty()) {
         std::cout << "str is empty" << std::endl;
         return;
     }
     std::cout << str << std::endl;
-    
 }
+
 int main() {
     std::map<string, string> map_;
     map_.insert(pair<string, string>("wuyi", "123"));  

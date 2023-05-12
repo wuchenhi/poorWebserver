@@ -85,7 +85,6 @@ void connection_pool::DestroyPool() {
 		for (it = connDeque.begin(); it != connDeque.end(); ++it) {
 			redisContext *con = *it;
 			con = nullptr;
-            //? 关闭连接
 		}
 		m_CurConn = 0;
 		m_FreeConn = 0;

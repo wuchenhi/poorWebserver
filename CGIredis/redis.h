@@ -8,17 +8,17 @@
 #include <string.h>
 #include <iostream>
 #include <string>
-#include "spdlog/spdlog.h"
+// #include "spdlog/spdlog.h"
 #include "../locker.h"
 
 using namespace std;
 
 class connection_pool {
 public:
-	redisContext *GetConnection();				 //获取数据库连接
+	redisContext *GetConnection();				//获取数据库连接
 	bool ReleaseConnection(redisContext *conn); //释放连接
-	int GetFreeConn();					 //获取连接
-	void DestroyPool();					 //销毁所有连接
+	int GetFreeConn();					        //获取连接
+	void DestroyPool();					        //销毁所有连接
 
 	//局部静态变量单例模式
 	static connection_pool *GetInstance();

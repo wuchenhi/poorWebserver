@@ -9,7 +9,7 @@ else
 
 endif
 
-server: main.cpp  ./timer/lst_timer.cpp ./http/http_conn.cpp  ./CGIredis/redis.cpp  ./webserver/webserver.cpp ./configure/configure.cpp
+server: main.cpp  ./timer/lst_timer.cpp ./http/http_conn.cpp  ./CGIredis/redis.cpp  ./webserver/webserver.cpp ./configure/configure.cpp ./log/log.cpp
 	$(CXX) -o server  $^ $(CXXFLAGS) -lpthread -lhiredis
 
 clean:

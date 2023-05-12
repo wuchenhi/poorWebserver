@@ -230,7 +230,8 @@ http_conn::HTTP_CODE http_conn::parse_headers(char *text) {
         m_host = text;
     }
     else {
-        spdlog::info("oop!unknow header:{0}",text);
+        //spdlog::info("oop!unknow header:{0}",text);
+        //LOG_INFO("oop!unknow header: %s", text);
     }
     return NO_REQUEST;
 }
