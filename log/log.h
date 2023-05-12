@@ -1,12 +1,18 @@
 #ifndef M_LOG_H
 #define M_LOG_H
 
+#include <stdio.h>
+#include <iostream>
+#include <string>
+#include <stdarg.h>
+#include <pthread.h>
 #include "block_queue.h"
 
 using namespace std;
 
 class Log {
 public:
+    //局部静态单例模式
     static Log *get_instance() {
         static Log instance;
         return &instance;
@@ -15,9 +21,8 @@ public:
     static void *flush_log_thread(void *args) {
         Log::get_instance()->async_write_log();
     }
-    //日志文件、日志缓冲区大小、最大行数以及最长日志条队列
-    bool init(const char *file_name, int close_log, int log_buf_size = 8192, 
-              int split_lines = 5000000, int max_queue_size = 0);
+    //可选择的参数有日志文件、日志缓冲区大小、最大行数以及最长日志条队列
+    bool init(const char *file_name, int close_log, int log_buf_size = 8192, int split_lines = 5000000, int max_queue_size = 0);
 
     void write_log(int level, const char *format, ...);
 
@@ -48,7 +53,7 @@ private:
     block_queue<string> *m_log_queue; //阻塞队列
     bool m_is_async;                  //是否同步标志位
     locker m_mutex;
-    int m_close_log;    //关闭日志
+    int m_close_log; //关闭日志
 };
 
 #define LOG_DEBUG(format, ...) if(0 == m_close_log) {Log::get_instance()->write_log(0, format, ##__VA_ARGS__); Log::get_instance()->flush();}

@@ -263,7 +263,7 @@ http_conn::HTTP_CODE http_conn::process_read() {
         text = get_line();
         m_start_line = m_checked_idx;
         //spdlog::info("{0}", text);
-        //LOG_INFO("%s", text);
+        LOG_INFO("%s", text);
         switch (m_check_state)
         {
         case CHECK_STATE_REQUESTLINE:

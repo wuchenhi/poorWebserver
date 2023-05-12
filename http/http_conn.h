@@ -21,7 +21,7 @@
 #include <sys/wait.h>
 #include <sys/uio.h>
 #include <map>
-// #include "../log/log.h"
+#include "../log/log.h"
 #include "../locker.h"
 #include "../CGIredis/redis.h"
 #include "../timer/lst_timer.h"
