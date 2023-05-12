@@ -13,9 +13,9 @@ Config::Config(){
 
 void Config::parse_arg(int argc, char*argv[]){
     int opt;
-    //单个字符后接一个冒号：表示该选项后必须跟一个参数
+    // 单个字符后接一个冒号：表示该选项后必须跟一个参数
     const char *str = "p:s:t";
-    //getopt()用来分析命令行参数 参数argc和argv分别代表参数个数和内容
+    // getopt()用来分析命令行参数 参数argc和argv分别代表参数个数和内容
     while ((opt = getopt(argc, argv, str)) != -1)
     {
         switch (opt)

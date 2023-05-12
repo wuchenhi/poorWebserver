@@ -26,15 +26,13 @@
 
 class util_timer;
 
-struct client_data
-{
+struct client_data {
     sockaddr_in address;
     int sockfd;
     util_timer *timer;
 };
 
-class util_timer
-{
+class util_timer {
 public:
     util_timer() : prev(NULL), next(NULL) {}
 
@@ -47,8 +45,7 @@ public:
     util_timer *next;
 };
 
-class sort_timer_lst
-{
+class sort_timer_lst {
 public:
     sort_timer_lst();
     ~sort_timer_lst();
@@ -65,8 +62,7 @@ private:
     util_timer *tail;
 };
 
-class Utils
-{
+class Utils {
 public:
     Utils() {}
     ~Utils() {}

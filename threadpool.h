@@ -5,19 +5,16 @@
 #include <cstdio>
 #include <exception>
 #include <pthread.h>
-#include "locker.h"
 #include "CGIredis/redis.h"
-
-#include "spdlog/spdlog.h"
+#include "locker.h"
 
 //使用一个工作队列完全解除了主线程和工作线程的耦合关系：主线程往工作队列中插入任务，工作线程通过竞争来取得任务并执行它。
 //半同步/半反应堆
 template <typename T>
 class threadpool {
 public:
-    ////gdb调试时，先将线程池数量减小为1，观察逻辑是否正确，然后增加线程数，观察同步是否正确
-    //thread_number是线程池中线程的数量
-    //max_requests是请求队列中最多允许的、等待处理的请求的数量
+    // gdb调试时，先将线程池数量减小为1，观察逻辑是否正确，然后增加线程数，观察同步是否正确
+    // thread_number是线程池中线程的数量 max_requests是请求队列中最多允许的、等待处理的请求的数量
     threadpool(connection_pool *connPool, int thread_number = 8, int max_request = 10000);
     ~threadpool();
     bool append(T *request, int state);
@@ -29,16 +26,16 @@ private:
     void run();
 
 private:
-    int m_thread_number;        //线程池中的线程数
-    int m_max_requests;         //请求队列中允许的最大请求数
-    pthread_t *m_threads;       //描述线程池的数组，其大小为m_thread_number
-    std::deque<T *> m_workqueue; //deque请求队列 不用vector 因为在头部更改效率差
-    locker m_queuelocker;       //保护请求队列的互斥锁
-    sem m_queuestat;            //是否有任务需要处理
-    connection_pool *m_connPool;  //数据库
+    int m_thread_number;          //线程池中的线程数
+    int m_max_requests;           //请求队列中允许的最大请求数
+    pthread_t *m_threads;         //描述线程池的数组，其大小为m_thread_number
+    std::deque<T *> m_workqueue;  //deque请求队列 不用vector 因为在头部更改效率差
+    locker m_queuelocker;         //保护请求队列的互斥锁
+    sem m_queuestat;              //是否有任务需要处理
+    connection_pool *m_connPool;  //数据库连接池
 };
 
-//构造函数中创建线程池,pthread_create函数中将类的对象作为参数传递给静态函数(worker),在静态函数中引用>这个对象,并调用其动态方法(run)
+//构造函数中创建线程池,pthread_create函数中将类的对象作为参数传递给静态函数(worker),在静态函数中引用这个对象,并调用其动态方法(run)
 //类对象传递时用this指针，传递给静态函数后，将其转换为线程池类，并调用私有成员函数run
 template <typename T>
 threadpool<T>::threadpool(connection_pool *connPool, int thread_number, int max_requests) : m_thread_number(thread_number), m_max_requests(max_requests), m_threads(NULL),m_connPool(connPool) {
@@ -79,15 +76,14 @@ bool threadpool<T>::append(T *request, int state) {
     request->m_state = state;
     m_workqueue.push_back(request);
     m_queuelocker.unlock();
-    m_queuestat.post();//append以后信号量 post      run-> work
+    m_queuestat.post(); //append以后信号量 post    run-> work
     return true;
 }
 
 template <typename T>
 bool threadpool<T>::append_p(T *request) {
     m_queuelocker.lock();
-    if (m_workqueue.size() >= m_max_requests)
-    {
+    if (m_workqueue.size() >= m_max_requests) {
         m_queuelocker.unlock();
         return false;
     }
@@ -100,7 +96,7 @@ bool threadpool<T>::append_p(T *request) {
 template <typename T>
 void *threadpool<T>::worker(void *arg) {
     //将参数强转为线程池类，调用成员方法
-     threadpool *pool = static_cast<threadpool *>(arg);//this 指针导入
+    threadpool *pool = static_cast<threadpool *>(arg);//this 指针导入
     pool->run();
     return pool;
 }
@@ -124,7 +120,8 @@ void threadpool<T>::run() {
         //reactor模式中，主线程(I/O处理单元)只负责监听文件描述符上是否有事件发生，
         //有的话立即通知工作线程(逻辑单元 )，读写数据、接受新连接及处理客户请求均在工作线程中完成。
         //通常由同步I/O实现。
-        if (0 == request->m_state) {
+        //state 读为0, 写为1
+        if (request->m_state == 0) {
             if (request->read_once()) {
                 request->improv = 1;
                 connectionRAII myrediscon(&request->redis, m_connPool);

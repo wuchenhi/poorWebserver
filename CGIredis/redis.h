@@ -8,7 +8,6 @@
 #include <string.h>
 #include <iostream>
 #include <string>
-// #include "spdlog/spdlog.h"
 #include "../locker.h"
 
 using namespace std;

@@ -1,9 +1,5 @@
-/*
- * 线程池 C++11
- */ 
-
-#ifndef M_THREADPOOL_H
-#define M_THREADPOOL_H
+#ifndef M_THREADPOOL11_H
+#define M_THREADPOOL11_H
 
 #include <queue>
 #include <mutex>
@@ -70,4 +66,4 @@ private:
     std::shared_ptr<Pool> PoolPtr;
 };
 
-#endif // M_THREADPOOL_H
+#endif

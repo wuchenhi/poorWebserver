@@ -7,10 +7,7 @@ int main(int argc, char *argv[])
     config.parse_arg(argc, argv);
 
     WebServer server;
-    //端口号
-    //数据库连接池数量 redis_num
-    //线程池内的线程数量 thread_num
-    //初始化
+    //初始化  端口号, 数据库连接池数量 redis_num, 线程池内的线程数量 thread_num
     server.init(config.PORT, config.redis_num, config.thread_num);
     
     //数据库

@@ -21,8 +21,7 @@
 #include <sys/wait.h>
 #include <sys/uio.h>
 #include <map>
-// #include "spdlog/spdlog.h"
-#include "../log/log.h"
+// #include "../log/log.h"
 #include "../locker.h"
 #include "../CGIredis/redis.h"
 #include "../timer/lst_timer.h"
@@ -59,7 +58,7 @@ public:
         CHECK_STATE_HEADER,          //解析请求头
         CHECK_STATE_CONTENT          //POST时 解析消息体
     };
-     //报文解析的结果
+    //报文解析的结果
     enum HTTP_CODE {
         NO_REQUEST,
         GET_REQUEST,
@@ -76,6 +75,7 @@ public:
         LINE_BAD,    //报文语法有误
         LINE_OPEN    //不完整行
     };
+
 public:
     http_conn() = default;
     ~http_conn() = default;
@@ -86,8 +86,7 @@ public:
     //关闭http连接
     void close_conn(bool real_close = true);
     void process();
-    //读取浏览器端发来的全部数据
-    bool read_once();
+    bool read_once();//读取浏览器端发来的全部数据
     bool write();
     sockaddr_in *get_address() {
         return &m_address;
@@ -95,7 +94,6 @@ public:
 
     int timer_flag;
     int improv;
-
 
 private:
     void init();
@@ -132,7 +130,6 @@ public:
     static int m_epollfd;
     static int m_user_count;
     redisContext* redis;
-   // MYSQL *mysql;
     int m_state;  //读为0, 写为1
 
 private:
@@ -158,7 +155,7 @@ private:
     //以下为解析请求报文中对应的6个变量
     //存储读取文件的名称
     char m_real_file[FILENAME_LEN];
-    char *m_url;   //
+    char *m_url; 
     char *m_version;
     char *m_host;
     int m_content_length;
