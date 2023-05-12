@@ -22,7 +22,10 @@
 
 * Ubuntu版本 20.04
 * Redis 版本 5.0.7
-  测试前确认已启用Redis数据库edis-server
+  测试前确认已启用Redis数据库
+  ```
+  redis-server
+  ```
 
 ```
 make
